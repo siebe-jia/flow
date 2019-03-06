@@ -1,0 +1,83 @@
+
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>校园网流量账号管理系统后台</title>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+</head>
+
+<body>
+<form class="layui-form" id="recordedit" action="" style="margin:20px 0px">
+    <div class="layui-form-item">
+        <div class="layui-inline">
+            <label class="layui-form-label">教工号</label>
+            <div class="layui-input-inline">
+                <input type="text" name="username" required  lay-verify="required" placeholder="请输入教工号" autocomplete="off" class="layui-input" value="{$user.username}">
+            </div>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">姓名</label>
+            <div class="layui-input-inline">
+                <input type="text" name="realname" required  lay-verify="required" placeholder="请输入姓名" autocomplete="off" class="layui-input" value="{$user.real_name}">
+            </div>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-inline">
+            <label class="layui-form-label">创建日期</label>
+            <div class="layui-input-inline">
+                <input type="text" name="addtime" required  lay-verify="required" placeholder="" autocomplete="off" class="layui-input" value="{$user.create_time}">
+            </div>
+        </div>
+        <div class="layui-inline">
+            <label class="layui-form-label">申请次数</label>
+            <div class="layui-input-inline">
+                <input type="text" name="record" required  lay-verify="required|number" placeholder="" autocomplete="off" class="layui-input" value="{$user.apply_count}">
+            </div>
+        </div>
+    </div>
+</form>
+<div style="margin:0px 20px;">
+    <table class="layui-table" lay-size="sm">
+        <colgroup>
+            <col>
+            <col>
+            <col>
+        </colgroup>
+        <thead>
+        <tr>
+            <th>账号</th>
+            <th>密码</th>
+            <th>申请日期</th>
+            <th>时长</th>
+            <th>过期时间</th>
+            <th>审核状态</th>
+        </tr>
+        </thead>
+        <tbody>
+        {volist name="user['record']" id="vo"}
+        <tr>
+            <td>{$vo.account}</td>
+            <td>{$vo.password}</td>
+            <td>{$vo.create_time}</td>
+            <td>{$vo.duration}</td>
+            <td>{$vo.expire_time}</td>
+            <td>{$vo.condition}</td>
+        </tr>
+        {/volist}
+        </tbody>
+    </table>
+</div>
+<!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+<!--[if lt IE 9]>
+<script src="/static/html5shiv/html5shiv.min.js"></script>
+<script src="/static/respond/respond.min.js"></script>
+<![endif]-->
+<script src="/static/layui/layui.js"></script>
+</body>
+
+</html>

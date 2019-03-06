@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<title>校园网流量账号管理系统后台</title>
+	<link rel="stylesheet" href="/static/layui/css/layui.css">
+</head>
+
+<body>
+	<div class="layui-fluid">
+		<div class="demoTable">
+			<!--教工号：-->
+			<!--<div class="layui-inline">-->
+				<!--<input class="layui-input" name="id" id="reloadusername" autocomplete="off">-->
+			<!--</div>-->
+			账号：
+			<div class="layui-inline">
+				<input class="layui-input" name="id" id="reloadaccount" autocomplete="off">
+			</div>
+			<button class="layui-btn" data-type="reload">搜索</button>
+		</div>
+		<table class="layui-hide" id="record" lay-filter="record"></table>
+
+	</div>
+	<script type="text/html" id="toolbarDemo">
+		<div class="layui-btn-container">
+		  <button class="layui-btn layui-btn-sm" lay-event="getCheckData">获取选中行数据</button>
+		  <button class="layui-btn layui-btn-sm" lay-event="getCheckLength">获取选中数目</button>
+		  <button class="layui-btn layui-btn-sm" lay-event="isAll">验证是否全选</button>
+		  <button class="layui-btn layui-btn-sm" lay-event="reload">刷新</button>
+		</div>
+	</script>
+	<script type="text/html" id="barDemo">
+		<a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+		<a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+	  </script>
+	<!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+	<!--[if lt IE 9]>
+     		<script src="/static/html5shiv/html5shiv.min.js"></script>
+	 		<script src="/static/respond/respond.min.js"></script>
+		<![endif]-->
+	<script src="/static/layui/layui.js"></script>
+	<script>
+		layui.use(['jquery', 'layer', 'table'], function () {
+			var table = layui.table, layer = layui.layer, $ = layui.jquery;
+			table.render({
+				elem: '#record'
+				, url: '/index.php/record'
+				, toolbar: '#toolbarDemo'
+				, response: {
+					statusCode: 200 //规定成功的状态码，默认：0
+					// ,statusName: 'status' //规定数据状态的字段名称，默认：code
+					// ,statusCode: 200 //规定成功的状态码，默认：0
+					// ,msgName: 'hint' //规定状态信息的字段名称，默认：msg
+					// ,countName: 'total' //规定数据总数的字段名称，默认：count
+					// ,dataName: 'rows' //规定数据列表的字段名称，默认：data
+				}
+				, parseData: function (res) { //res 即为原始返回的数据
+					return {
+						"code": res.code, //解析接口状态
+						"msg": res.msg, //解析提示文本
+						"count": res.count, //解析数据长度
+						"data": res.data //解析数据列表
+					};
+				}
+				, title: '用户申请记录数据表'
+				, cols: [[
+					{ type: 'checkbox', fixed: 'left' }
+					, { field: 'id', title: 'ID', width: 60, fixed: 'left', unresize: true, sort: true }
+					, { field: 'username', title: '教工号', width: 110, align: 'center' }
+					, { field: 'real_name', title: '姓名', width: 90 }
+					, { field: 'account', title: '账号', width: 110, align: 'center' }
+					, { field: 'create_time', title: '申请日期',width: 110, align: 'center', sort: true }
+					, { field: 'duration', title: '时长',width: 70, align: 'center', sort: true }
+					, { field: 'expire_time', title: '过期日期', align: 'center', sort: true }
+					, { field: 'condition', title: '状态', width: 80, align: 'center', sort: true }
+					, { field: 'update_time', title: '处理日期', sort: true }
+					, { fixed: 'right', title: '操作', toolbar: '#barDemo',width: 120, align: 'center' }
+				]]
+				, id: 'recordReload'
+				, page: true
+			});
+
+			//头工具栏事件
+			table.on('toolbar(record)', function (obj) {
+				var checkStatus = table.checkStatus(obj.config.id);
+				switch (obj.event) {
+					case 'getCheckData':
+						var data = checkStatus.data;
+						layer.alert(JSON.stringify(data));
+						break;
+					case 'getCheckLength':
+						var data = checkStatus.data;
+						layer.msg('选中了：' + data.length + ' 个');
+						break;
+					case 'isAll':
+						layer.msg(checkStatus.isAll ? '全选' : '未全选');
+						break;
+					case 'reload':
+						active.reload.call(this, {})//刷新
+						break;
+				};
+			});
+			//监听行工具事件
+			table.on('tool(record)', function (obj) {
+				var data = obj.data;
+				if (obj.event === 'edit') {
+                    let url ='http://' + window.location.host + '/index.php/record/' + obj.data.id;
+                    layer.open({
+						title: '编辑',
+						type: 2,
+						area: ['420px', '460px'],
+						shadeClose: true, //点击遮罩关闭
+                        fixed: false, //不固定
+						maxmin: true,
+                        content: url,
+						yes: function (index) {
+							layer.close(index)
+						},
+					});
+				} else if (obj.event === 'del') {
+					layer.confirm('真的删除行么', function (index) {
+						$.post("/index.php/record/del", { id: data.id },
+							function (data) {
+								//console.log(data)
+								if (data.code == 200) {
+									obj.del();
+									layer.msg(data.msg, { icon: 1 });
+								} else {
+									layer.msg(data.msg, { icon: 2 });
+								}
+							}, "json").fail(function () {
+								layer.msg("网络异常，请重试！", { icon: 0 });
+							})
+						layer.close(index);
+					});
+				}
+			});
+			$('.demoTable .layui-btn').on('click', function () {
+				var type = $(this).data('type');
+				let key = { username: $('#reloadusername').val(), account: $('#reloadaccount').val() }
+				active[type] ? active[type].call(this, key) : '';
+			});
+			//搜索功能
+			var active = {
+				reload: function (key) {
+					//执行重载
+					table.reload('recordReload', {
+						url: '/index.php/record',
+						method: 'get',
+						page: {
+							curr: 1 //重新从第 1 页开始
+						}
+						, where: {
+							key: key
+						}
+					});
+				}
+			};
+		});
+	</script>
+</body>
+
+</html>

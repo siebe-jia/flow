@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<title>校园网流量账号管理系统后台</title>
+	<link rel="stylesheet" href="/static/layui/css/layui.css">
+</head>
+
+<body>
+	<table class="layui-hide" id="apply" lay-filter="apply"></table>
+	<script type="text/html" id="barDemo">
+	  <a class="layui-btn layui-btn-xs" lay-event="pass">通过</a>
+	  <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="refuse">拒绝</a>
+	</script>
+	<!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+	<!--[if lt IE 9]>
+     		<script src="/static/html5shiv/html5shiv.min.js"></script>
+	 		<script src="/static/respond/respond.min.js"></script>
+		<![endif]-->
+	<script src="/static/layui/layui.js"></script>
+	<script>
+		layui.use(['jquery', 'layer', 'table'], function () {
+			var table = layui.table, layer = layui.layer, $ = layui.jquery;
+			table.render({
+				elem: '#apply'
+				, url: '/index.php/review'
+				, response: {
+					statusCode: 200 //规定成功的状态码，默认：0
+					//,statusName: 'status' //规定数据状态的字段名称，默认：code
+					//,statusCode: 200 //规定成功的状态码，默认：0
+					// ,msgName: 'hint' //规定状态信息的字段名称，默认：msg
+					// ,countName: 'total' //规定数据总数的字段名称，默认：count
+					// ,dataName: 'rows' //规定数据列表的字段名称，默认：data
+				}
+				, parseData: function (res) { //res 即为原始返回的数据
+					return {
+						"code": res.code, //解析接口状态
+						"msg": res.msg, //解析提示文本
+						"count": res.count, //解析数据长度
+						"data": res.data //解析数据列表
+					};
+				}
+				, title: '用户申请数据表'
+				, cols: [[
+					{ field: 'id', title: 'ID', width: 60, fixed: 'left', unresize: true, sort: true }
+					, { field: 'username', title: '教工号', width: 110, align: 'center' }
+					, { field: 'real_name', title: '姓名', width: 90, align: 'center' }
+					, { field: 'tel', title: '手机号码', width: 120, align: 'center' }
+					, { field: 'department', title: '部门', width: 150, align: 'center' }
+					, { field: 'create_time', title: '申请日期', width: 110, align: 'center' }
+					, { field: 'duration', title: '时长', width: 70, align: 'center' }
+					, { field: 'account', title: '账号', edit: 'text', align: 'center' }
+					, { field: 'password', title: '密码', edit: 'text', align: 'center' }
+					, { field: 'expire_time', title: '过期时间',  edit: 'text', align: 'center' }
+					, { fixed: 'right', title: '操作', toolbar: '#barDemo', width: 120, align: 'center' }
+				]]
+			});
+			//监听单元格编辑
+			table.on('edit(apply)', function (obj) {
+				var value = obj.value //得到修改后的值
+					, data = obj.data //得到所在行所有键值
+					, field = obj.field; //得到字段
+				layer.msg('[ID: ' + data.id + '] ' + field + ' 字段更改为：' + value);
+			});
+			//监听行工具事件
+			table.on('tool(apply)', function (obj) {
+				var data = obj.data;
+				//console.log(data)
+				if (obj.event === 'pass') {
+					layer.confirm('确定通过审核吗？', function (index) {
+						let arr = {
+							"id": data.id,
+							"account": data.account,
+							"password": data.password,
+							"expire_time": data.expire_time
+						}
+						$.post("/index.php/review/pass", arr,
+							function (res) {
+								if (res.code == 200) {
+									obj.del();
+									layer.msg(res.msg, { icon: 1 });
+								} else {
+									layer.msg(res.msg, { icon: 2 });
+								}
+							}, "json").fail(function (res) {
+							    console.log(res)
+                            var msg = res.responseJSON.msg,str = '';
+                            if (res.responseJSON.msg instanceof Object){
+                                for(var k in msg){
+                                    str = str + msg[k] + '<br>';
+                                }
+                            }else {
+                                str = res.responseJSON.msg
+                            }
+								layer.msg(str, { icon: 0 });
+							})
+						layer.close(index);
+					});
+				} else if (obj.event === 'refuse') {
+					layer.confirm('要拒绝该条申请吗？', function (index) {
+						$.post("/index.php/review/refuse", { "id": data.id },
+							function (res) {
+								//console.log(data)
+								if (res.code == 200) {
+									obj.del();
+									layer.msg(res.msg, { icon: 1 });
+								} else {
+									layer.msg(res.msg, { icon: 2 });
+								}
+							}, "json").fail(function (res) {
+								layer.msg(res.responseJSON.msg, { icon: 0 });
+							})
+						layer.close(index);
+					});
+				}
+			});
+		});
+	</script>
+</body>
+
+</html>
